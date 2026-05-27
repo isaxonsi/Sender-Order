@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Store Order Sender</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f0f;
+      --surface: #1a1a1a;
+      --surface2: #222;
+      --border: #2e2e2e;
+      --border2: #3a3a3a;
+      --text: #f0f0f0;
+      --text2: #999;
+      --text3: #555;
+      --accent: #e8ff5a;
+      --accent-dim: rgba(232,255,90,0.12);
+      --red: #ff5a5a;
+      --red-bg: rgba(255,90,90,0.1);
+      --green: #5aff9a;
+      --green-bg: rgba(90,255,154,0.1);
+      --radius: 8px;
+      --font: 'IBM Plex Sans', sans-serif;
+      --mono: 'IBM Plex Mono', monospace;
+    }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2rem 1rem 4rem;
+    }
+
+    .container { max-width: 660px; margin: 0 auto; }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 2rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      width: 36px; height: 36px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
+    .subtitle { font-size: 13px; color: var(--text2); margin-top: 2px; }
+
+    .section-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+      margin-top: 1.5rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.25rem;
+      margin-bottom: 0;
+    }
+
+    label {
+      font-size: 12px;
+      color: var(--text2);
+      display: block;
+      margin-bottom: 5px;
+      font-family: var(--mono);
+    }
+
+    input, select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: var(--font);
+      padding: 8px 10px;
+      outline: none;
+      transition: border-color 0.15s;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      padding-right: 30px;
+    }
+
+    input:focus, select:focus { border-color: var(--accent); }
+    input::placeholder { color: var(--text3); }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .note {
+      font-size: 12px;
+      color: var(--text3);
+      margin-top: 6px;
+      font-family: var(--mono);
+    }
+
+    /* Product manager */
+    .tags-wrap { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; min-height: 4px; }
+    .tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 20px;
+      padding: 3px 6px 3px 10px;
+      font-size: 12px;
+      color: var(--text2);
+    }
+    .tag button {
+      background: none; border: none; cursor: pointer;
+      color: var(--text3); font-size: 15px; line-height: 1;
+      padding: 0 2px;
+      font-family: var(--font);
+      transition: color 0.1s;
+    }
+    .tag button:hover { color: var(--red); }
+
+    .add-product-row { display: flex; gap: 8px; align-items: flex-end; }
+    .add-product-row input { flex: 1; }
+    .btn-add-product {
+      cursor: pointer;
+      background: var(--accent-dim);
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      color: var(--accent);
+      font-size: 13px;
+      font-family: var(--mono);
+      padding: 8px 14px;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .btn-add-product:hover { background: rgba(232,255,90,0.2); }
+
+    /* Items table */
+    .items-header {
+      display: grid;
+      grid-template-columns: 1fr 90px 90px 36px;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .items-header span {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .item-row {
+      display: grid;
+      grid-template-columns: 1fr 90px 90px 36px;
+      gap: 8px;
+      margin-bottom: 8px;
+      align-items: center;
+    }
+
+    .btn-remove {
+      cursor: pointer;
+      background: none;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      color: var(--text3);
+      font-size: 18px;
+      width: 36px; height: 36px;
+      display: flex; align-items: center; justify-content: center;
+      transition: color 0.15s, border-color 0.15s, background 0.15s;
+    }
+    .btn-remove:hover { color: var(--red); border-color: var(--red); background: var(--red-bg); }
+
+    .items-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      margin-top: 4px;
+    }
+
+    .btn-add-item {
+      cursor: pointer;
+      background: none;
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      color: var(--text2);
+      font-size: 13px;
+      font-family: var(--font);
+      padding: 6px 12px;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .btn-add-item:hover { border-color: var(--accent); color: var(--accent); }
+
+    .total-block { text-align: right; }
+    .total-label { font-family: var(--mono); font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; }
+    .total-value { font-size: 22px; font-weight: 600; color: var(--accent); letter-spacing: -0.5px; margin-top: 2px; }
+
+    /* Status */
+    .status {
+      display: none;
+      padding: 10px 14px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-family: var(--mono);
+      margin-top: 1rem;
+    }
+    .status.success { display: block; background: var(--green-bg); color: var(--green); border: 1px solid rgba(90,255,154,0.3); }
+    .status.error { display: block; background: var(--red-bg); color: var(--red); border: 1px solid rgba(255,90,90,0.3); }
+
+    /* Actions */
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 1.25rem;
+    }
+
+    .btn-clear {
+      cursor: pointer;
+      background: none;
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      color: var(--text2);
+      font-size: 14px;
+      font-family: var(--font);
+      padding: 10px 20px;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .btn-clear:hover { border-color: var(--text2); color: var(--text); }
+
+    .btn-send {
+      cursor: pointer;
+      background: var(--accent);
+      border: none;
+      border-radius: 6px;
+      color: #0f0f0f;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: var(--font);
+      padding: 10px 24px;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn-send:hover { opacity: 0.88; }
+    .btn-send:active { transform: scale(0.97); }
+    .btn-send:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    @media (max-width: 520px) {
+      .two-col { grid-template-columns: 1fr; }
+      .items-header, .item-row { grid-template-columns: 1fr 70px 80px 36px; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="logo">🛒</div>
+    <div>
+      <h1>Store Order Sender</h1>
+      <p class="subtitle">Fill in an order and send it straight to Discord</p>
+    </div>
+  </header>
+
+  <!-- Webhook -->
+  <div class="section-label">Discord Webhook</div>
+  <div class="card">
+    <label for="webhook">Webhook URL</label>
+    <input type="text" id="webhook" placeholder="https://discord.com/api/webhooks/..." autocomplete="off" />
+    <p class="note">// Saved in your browser automatically</p>
+  </div>
+
+  <!-- Product manager -->
+  <div class="section-label">Product List</div>
+  <div class="card">
+    <div class="tags-wrap" id="custom-tags"></div>
+    <div class="add-product-row">
+      <div style="flex:1;">
+        <label for="new-product">Add a custom product</label>
+        <input type="text" id="new-product" placeholder="e.g. Raptor IV" />
+      </div>
+      <button class="btn-add-product" onclick="addCustomProduct()">+ Add</button>
+    </div>
+    <p class="note" style="margin-top:8px;">// Custom products are saved in your browser</p>
+  </div>
+
+  <!-- Order details -->
+  <div class="section-label">Order Details</div>
+  <div class="card">
+    <div class="two-col">
+      <div>
+        <label for="cust-name">Customer Name</label>
+        <input type="text" id="cust-name" placeholder="e.g. Juan dela Cruz" />
+      </div>
+      <div>
+        <label for="order-id">Order # (optional)</label>
+        <input type="text" id="order-id" placeholder="e.g. ORD-0042" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Items -->
+  <div class="section-label">Items</div>
+  <div class="card">
+    <div class="items-header">
+      <span>Product</span>
+      <span>Qty</span>
+      <span>Price (₱)</span>
+      <span></span>
+    </div>
+    <div id="items-container"></div>
+    <div class="items-footer">
+      <button class="btn-add-item" onclick="addItem()">+ Add item</button>
+      <div class="total-block">
+        <div class="total-label">Total</div>
+        <div class="total-value" id="total-display">₱0.00</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="status" id="status-msg"></div>
+
+  <div class="actions">
+    <button class="btn-clear" onclick="clearForm()">Clear form</button>
+    <button class="btn-send" id="send-btn" onclick="sendOrder()">Send to Discord ↗</button>
+  </div>
+
+</div>
+
+<script>
+  const BASE_PRODUCTS = [
+    'Tempest IV','Bobcat IV','Anvil IV','Torrente IV','Renegade IV',
+    'Il Toro IV','Osprey IV','Bettina IV','Vulcano IV',
+    'Venator IV','Dolabra','Canto IV','Ducks'
+  ];
+
+  let customProducts = [];
+  let items = [];
+
+  function allProducts() { return [...BASE_PRODUCTS, ...customProducts]; }
+
+  function buildProductOptions(selected) {
+    return allProducts().map(p =>
+      `<option value="${p}"${selected === p ? ' selected' : ''}>${p}</option>`
+    ).join('');
+  }
+
+  function buildQtyOptions(selected) {
+    let opts = '';
+    for (let i = 1; i <= 500; i++) {
+      opts += `<option value="${i}"${parseInt(selected) === i ? ' selected' : ''}>${i}</option>`;
+    }
+    return opts;
+  }
+
+  function addCustomProduct() {
+    const input = document.getElementById('new-product');
+    const name = input.value.trim();
+    if (!name) return;
+    if (allProducts().map(p => p.toLowerCase()).includes(name.toLowerCase())) {
+      input.value = '';
+      return;
+    }
+    customProducts.push(name);
+    input.value = '';
+    saveCustomProducts();
+    renderCustomTags();
+    renderItems();
+  }
+
+  document.getElementById('new-product').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') addCustomProduct();
+  });
+
+  function removeCustomProduct(name) {
+    customProducts = customProducts.filter(p => p !== name);
+    saveCustomProducts();
+    renderCustomTags();
+    renderItems();
+  }
+
+  function renderCustomTags() {
+    const container = document.getElementById('custom-tags');
+    if (customProducts.length === 0) { container.innerHTML = ''; return; }
+    container.innerHTML = customProducts.map(p => `
+      <span class="tag">
+        ${p}
+        <button onclick="removeCustomProduct('${p.replace(/'/g,"&#39;")}')" aria-label="Remove ${p}">×</button>
+      </span>
+    `).join('');
+  }
+
+  function addItem(name, qty = 1, price = '') {
+    const id = Date.now() + Math.random();
+    items.push({ id, name: name || allProducts()[0], qty, price });
+    renderItems();
+  }
+
+  function removeItem(id) {
+    items = items.filter(i => i.id !== id);
+    renderItems();
+  }
+
+  function renderItems() {
+    const c = document.getElementById('items-container');
+    c.innerHTML = '';
+    items.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'item-row';
+      row.innerHTML = `
+        <select onchange="updateItem(${item.id},'name',this.value)">${buildProductOptions(item.name)}</select>
+        <select onchange="updateItem(${item.id},'qty',this.value)">${buildQtyOptions(item.qty)}</select>
+        <input type="number" min="0" step="0.01" placeholder="0.00" value="${item.price}" onchange="updateItem(${item.id},'price',this.value)" />
+        <button class="btn-remove" onclick="removeItem(${item.id})" aria-label="Remove item">×</button>
+      `;
+      c.appendChild(row);
+    });
+    updateTotal();
+    saveState();
+  }
+
+  function updateItem(id, field, value) {
+    const item = items.find(i => i.id === id);
+    if (item) { item[field] = value; updateTotal(); saveState(); }
+  }
+
+  function updateTotal() {
+    const total = items.reduce((sum, i) => sum + (parseFloat(i.qty)||0) * (parseFloat(i.price)||0), 0);
+    document.getElementById('total-display').textContent = '₱' + total.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function saveState() {
+    try { localStorage.setItem('so_items_v3', JSON.stringify(items)); } catch(e) {}
+  }
+
+  function saveCustomProducts() {
+    try { localStorage.setItem('so_custom_products', JSON.stringify(customProducts)); } catch(e) {}
+  }
+
+  function loadState() {
+    try {
+      const wh = localStorage.getItem('so_webhook');
+      if (wh) document.getElementById('webhook').value = wh;
+      const cp = localStorage.getItem('so_custom_products');
+      if (cp) { customProducts = JSON.parse(cp); renderCustomTags(); }
+      const it = localStorage.getItem('so_items_v3');
+      if (it) { items = JSON.parse(it); renderItems(); }
+    } catch(e) {}
+  }
+
+  document.getElementById('webhook').addEventListener('change', function () {
+    try { localStorage.setItem('so_webhook', this.value); } catch(e) {}
+  });
+
+  function clearForm() {
+    document.getElementById('cust-name').value = '';
+    document.getElementById('order-id').value = '';
+    items = [];
+    renderItems();
+    hideStatus();
+  }
+
+  function showStatus(msg, type) {
+    const el = document.getElementById('status-msg');
+    el.textContent = msg;
+    el.className = 'status ' + type;
+  }
+
+  function hideStatus() {
+    document.getElementById('status-msg').className = 'status';
+  }
+
+  async function sendOrder() {
+    const webhook = document.getElementById('webhook').value.trim();
+    const custName = document.getElementById('cust-name').value.trim();
+    const orderId = document.getElementById('order-id').value.trim();
+    const btn = document.getElementById('send-btn');
+
+    if (!webhook) { showStatus('⚠ Please enter your Discord webhook URL.', 'error'); return; }
+    if (!webhook.startsWith('https://discord.com/api/webhooks/')) { showStatus('⚠ Webhook URL looks invalid. It should start with https://discord.com/api/webhooks/', 'error'); return; }
+    if (!custName) { showStatus('⚠ Please enter a customer name.', 'error'); return; }
+    if (items.length === 0) { showStatus('⚠ Please add at least one item.', 'error'); return; }
+
+    const total = items.reduce((sum, i) => sum + (parseFloat(i.qty)||0) * (parseFloat(i.price)||0), 0);
+    const now = new Date().toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' });
+
+    const itemLines = items.map(i => {
+      const sub = (parseFloat(i.qty)||0) * (parseFloat(i.price)||0);
+      return `> **${i.name}** — qty: ${i.qty} × ₱${parseFloat(i.price||0).toFixed(2)} = **₱${sub.toLocaleString('en-PH',{minimumFractionDigits:2})}**`;
+    }).join('\n');
+
+    const content = [
+      `🛒 **New Order${orderId ? ' — ' + orderId : ''}**`,
+      `👤 **Customer:** ${custName}`,
+      ``,
+      `📦 **Items:**`,
+      itemLines,
+      ``,
+      `💰 **Total: ₱${total.toLocaleString('en-PH',{minimumFractionDigits:2})}**`,
+      `🕐 ${now}`
+    ].join('\n');
+
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+
+    try {
+      const res = await fetch(webhook, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content, username: 'Store Orders' })
+      });
+      if (res.ok) {
+        showStatus('✓ Order sent to Discord successfully!', 'success');
+      } else {
+        showStatus('⚠ Discord returned an error. Check your webhook URL and try again.', 'error');
+      }
+    } catch(e) {
+      showStatus('⚠ Could not send. Check your webhook URL and internet connection.', 'error');
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Send to Discord ↗';
+  }
+
+  loadState();
+  if (items.length === 0) addItem();
+</script>
+</body>
+</html>
